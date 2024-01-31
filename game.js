@@ -13,9 +13,9 @@ function Gameboard() {
     const getBoard = () => board;
 
     const placeMark = (row, column, player) => {
-        if (board[row][column] !== '') return;
-
+        if (board[row][column].getValue() !== '') return false
         board[row][column].addMark(player);
+        return true;
     };
 
     const printBoard = () => {
@@ -27,7 +27,7 @@ function Gameboard() {
 }
 
 function Cell() {
-    let value = 0;
+    let value = '';
 
     const addMark = (player) => {
         value = player;
@@ -72,10 +72,14 @@ function GameController(
 
     const playRound = (row, column) => {
         console.log(`Marking ${getActivePlayer().name}'s mark at [${row},${column}]`);
-        board.placeMark(row, column, getActivePlayer.mark);
-
-        switchPlayerTurn();
-        printNewTurn();
+        if (!board.placeMark(row, column, getActivePlayer().mark)) {
+            console.log("That spot is already marked, please try again");
+            return;
+        }
+        else {
+            switchPlayerTurn();
+            printNewTurn();
+        }
     };
 
     printNewTurn();
