@@ -4,14 +4,18 @@ function Gameboard() {
     const board = [];
     let visited = [];
 
-    for (let i = 0; i < rows; i++) {
-        board[i] = [];
-        visited[i] = [];
-        for (let j = 0; j < columns; j++) {
-            board[i].push(Cell());
-            visited[i].push(false);
+    const newBoard = () => {
+        for (let i = 0; i < rows; i++) {
+            board[i] = [];
+            visited[i] = [];
+            for (let j = 0; j < columns; j++) {
+                board[i].push(Cell());
+                visited[i].push(false);
+            }
         }
     }
+
+    newBoard();
 
     const getBoard = () => board;
 
@@ -91,7 +95,7 @@ function Gameboard() {
         return true;
     }
 
-    return { getBoard, placeMark, printBoard, checkTie, checkWin };
+    return { getBoard, placeMark, printBoard, newBoard, checkTie, checkWin };
 }
 
 function Cell() {
@@ -138,18 +142,26 @@ function GameController(
         console.log(`${getActivePlayer().name}'s turn.`);
     };
 
+    const resultDiv = document.querySelector('.result');
+
     const playRound = (row, column) => {
         console.log(`Marking ${getActivePlayer().name}'s mark at [${row},${column}]`);
         if (!board.placeMark(row, column, getActivePlayer().mark)) return;
 
         if (board.checkWin(row, column, getActivePlayer().mark)) {
-            console.log(`${getActivePlayer().name} wins`);
+            resultDiv.textContent = `${activePlayer.name} wins`
+            board.newBoard();
+            switchPlayerTurn();
             return;
         }
         if (board.checkTie()) {
-            console.log(`Tie game`);
+            resultDiv.textContent = `Tie game`
+            board.newBoard();
+            switchPlayerTurn();
             return;
         }
+
+        resultDiv.textContent = ``
         switchPlayerTurn();
         printNewTurn();
     };
@@ -162,4 +174,45 @@ function GameController(
     };
 }
 
-const game = GameController();
+function ScreenController() {
+    const game = GameController();
+    const playerTurnDiv = document.querySelector('.turn');
+    const boardDiv = document.querySelector('.board');
+
+    const updateScreen = () => {
+        boardDiv.textContent = "";
+
+        const board = game.getBoard();
+        const activePlayer = game.getActivePlayer();
+
+        playerTurnDiv.textContent = `${activePlayer.name}'s turn`
+
+        board.forEach((row, index) => {
+            const currentRow = index
+            row.forEach((cell, index) => {
+                const cellButton = document.createElement("button");
+                cellButton.classList.add("cell");
+
+                cellButton.dataset.column = index
+                cellButton.dataset.row = currentRow
+                cellButton.innerHTML = cell.getValue() == '' ? "<br>" : cell.getValue();
+                boardDiv.appendChild(cellButton);
+            })
+        })
+    }
+
+    function clickHandlerBoard(e) {
+        const selectedColumn = parseInt(e.target.dataset.column);
+        const selectedRow = parseInt(e.target.dataset.row);
+
+        if (isNaN(selectedColumn) || isNaN(selectedRow)) return;
+
+        game.playRound(selectedRow, selectedColumn);
+        updateScreen();
+    }
+    boardDiv.addEventListener("click", clickHandlerBoard);
+
+    updateScreen();
+}
+
+ScreenController();
